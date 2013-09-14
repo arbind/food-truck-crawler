@@ -74,6 +74,10 @@ states.each do |state|
     state_tweeters[0..10].each do |tweeter|
       if tweeter[:href]
         place = tweeter[:place]
+        unless place.eql? next_place
+          file_state.write "<h2>#{place}</h2>\n"
+          next_place = place
+        end
         screen_name = tweeter[:href].to_s.split('/').last
         twitter_link = "<A href='#{tweeter[:href]}' target='t'>#{screen_name}</A>"
         line = "<div style='height:24px;line-height:24px; font-size: 16px'>\n"
@@ -82,10 +86,6 @@ states.each do |state|
         line = "#{line}  - #{twitter_link}\n"
         line = "#{line}</div>\n"
         file_state.write line
-        unless place.eql? next_place
-          file_state.write "<h2>#{place}</h2>\n"
-          next_place = place
-        end
       end
     end
     file_state.write "</body></html>\n"
