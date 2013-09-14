@@ -47,10 +47,16 @@ end
 states = tweeters.map {|tweeter| tweeter[:state]}
 states = states.uniq
 
+states.sort! do |a,b|
+  tweeters_in_states[b].count <=> tweeters_in_states[a].count
+end
+
+
 File.open(html_file('0-states'), 'w') do |file_states|
   file_states.write "<html><body>\n<h2>#{states.count} States</h2>\n"
   states.each do |state|
-    file_states.write "<div><a href='#{state}.html'>#{state}</a></div>\n"
+    count = tweeters_in_states[state].count
+    file_states.write "<div><a href='#{state}.html'>#{state} (#{count})</a></div>\n"
   end
   file_states.write "</body></html>\n"
 end
@@ -59,7 +65,8 @@ def follow_button_html(screen_name)
   "<iframe style='min-width:300px; height:20px;' allowtransparency='true' frameborder='0' scrolling='no' src='http://platform.twitter.com/widgets/follow_button.html?screen_name=#{screen_name}&show_count=true&show_screen_name=true'></iframe>"
 end
 
-tweeters_in_states.each do |state, state_tweeters|
+states.each do |state|
+  state_tweeters = tweeters_in_states[state]
   File.open(html_file(state), 'w') do |file_state|
     file_state.write "<html><body>\n<h1>#{state}</h1>\n"
     next_place = state_tweeters.first[:place]
@@ -84,32 +91,3 @@ tweeters_in_states.each do |state, state_tweeters|
     file_state.write "</body></html>\n"
   end
 end
-
-# next_place = tweeters.first[:place]
-# File.open(html_file(tweeters.first[:state]), 'a') { |file| file.write "<h2>#{next_place}</h2>\n" }
-
-# tweeters[0..10].each do |tweeter|
-#   if tweeter[:href]
-#     state = tweeter[:state]
-#     place = tweeter[:place]
-#     screen_name = tweeter[:href].to_s.split('/').last
-#     twitter_link = "<A href='#{tweeter[:href]}' target='t'>#{screen_name}</A>"
-#     follow_button_html = "<iframe allowtransparency='true' frameborder='0' scrolling='no' src='http://platform.twitter.com/widgets/follow_button.html?screen_name=#{screen_name}&show_count=true&show_screen_name=true' style='min-width:300px; height:20px;'></iframe>"
-#     line = "<div style='height:24px;line-height:24px; font-size: 16px'>\n"
-#     line += "  [#{tweeter[:state]}] [#{tweeter[:city]}] \n"
-#     line += "  #{follow_button_html}\n"
-#     line += "  - #{twitter_link}\n"
-#     line += "</div>\n"
-#     puts "writing to #{state}"
-#     File.open(html_file(state), 'a') do |file|
-#       file.write line
-#       unless place.eql? next_place
-#         file.write "<h2>#{place}</h2>\n" }
-#         next_place = place
-#       end
-#     end
-#   end
-# end
-# states.each do |state|
-#   File.open(html_file(state), 'a') { |file| file.write "</body></html>\n" }
-# end
