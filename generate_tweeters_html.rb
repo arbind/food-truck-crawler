@@ -17,7 +17,7 @@ tweeters = crafts.map do |craft|
     city = city.squish if city
     state = state.join(', ').squish if state
     place = "#{city.squish.downcase.capitalize}, #{state.squish.upcase}"
-    { place: place, state: state, city:city , href: craft['hrefs']['twitter'] }
+    { place: place, state: state, city:city , href: craft['hrefs']['twitter'], name: craft['name'] }
   end
 end
 
@@ -28,10 +28,11 @@ tweeters.sort! do |a,b|
 end
 
 tweeters_in_states = Hash.new {|hash, key| hash[key] = [ ]}
-tweeters.each do |tweeter|
-  tweeters_in_states[tweeter[:state]] << tweeter
+tweeters.each do |tweeter| # map tweeters to state
+  if tweeter and tweeter[:href] # if they have a twitter_href map to state
+    tweeters_in_states[tweeter[:state]] << tweeter
+  end
 end
-
 
 places = tweeters.map {|tweeter| tweeter[:place]}
 places = places.uniq
@@ -51,6 +52,12 @@ states.sort! do |a,b|
   tweeters_in_states[b].count <=> tweeters_in_states[a].count
 end
 
+tweeters_in_states.each do |state, tweeters| # prune empty states
+  if tweeters.count.eql? 0
+    states.delete(state)
+    tweeters_in_states.delete(state)
+  end
+end
 
 File.open(html_file('0-states'), 'w') do |file_states|
   file_states.write "<html><body>\n<h2>#{states.count} States</h2>\n"
@@ -71,7 +78,7 @@ states.each do |state|
     file_state.write "<html><body>\n<h1>#{state}</h1>\n"
     next_place = state_tweeters.first[:place]
     file_state.write "<h2>#{next_place}</h2>\n"
-    state_tweeters[0..10].each do |tweeter|
+    state_tweeters.each do |tweeter|
       if tweeter[:href]
         place = tweeter[:place]
         unless place.eql? next_place
@@ -86,7 +93,14 @@ states.each do |state|
         line = "#{line}  - #{twitter_link}\n"
         line = "#{line}</div>\n"
         file_state.write line
+      else # no twitter account
+        line = "<div style='height:24px;line-height:24px; font-size: 16px'>\n"
+        line = "#{line}  [#{tweeter[:state]}] [#{tweeter[:city]}] \n"
+        line = "#{line}  - #{tweeter[:name]}\n"
+        line = "#{line}</div>\n"
+        file_state.write line
       end
+
     end
     file_state.write "</body></html>\n"
   end
